@@ -83,6 +83,7 @@ export const ContentTable = React.memo(
       downloadToCsvFileName = null,
       onRowSelectionChange,
       initiallySelectedRows = [],
+      initiallyExpandedRows = [],
       autoRefresh = false
     } = contentTableProps;
     const {
@@ -115,6 +116,12 @@ export const ContentTable = React.memo(
     const table = useReactTable({
       data: data ?? noData,
       columns: columnDef,
+      initialState: {
+        expanded: initiallyExpandedRows.reduce(
+          (prev, cur) => ({ ...prev, [cur.id]: true }),
+          {}
+        )
+      },
       state: {
         rowSelection,
         columnVisibility,
