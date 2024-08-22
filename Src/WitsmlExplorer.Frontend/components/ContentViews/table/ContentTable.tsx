@@ -1,6 +1,7 @@
 import { TableBody, TableHead } from "@mui/material";
 import {
   ColumnSizingState,
+  ExpandedState,
   Header,
   Row,
   RowData,
@@ -82,8 +83,10 @@ export const ContentTable = React.memo(
       viewId,
       downloadToCsvFileName = null,
       onRowSelectionChange,
+      onExpandedChange,
       initiallySelectedRows = [],
-      initiallyExpandedRows = [],
+      rowSelection: controlledRowSelection = null,
+      expanded: controlledExpansionState = null,
       autoRefresh = false
     } = contentTableProps;
     const {
@@ -96,6 +99,7 @@ export const ContentTable = React.memo(
         ...initiallySelectedRows.map((row) => ({ [row.id]: true }))
       )
     );
+    const [expanded, setExpanded] = useState<ExpandedState>({});
     const [columnVisibility, setColumnVisibility] = useState(
       initializeColumnVisibility(viewId)
     );
@@ -116,14 +120,9 @@ export const ContentTable = React.memo(
     const table = useReactTable({
       data: data ?? noData,
       columns: columnDef,
-      initialState: {
-        expanded: initiallyExpandedRows.reduce(
-          (prev, cur) => ({ ...prev, [cur.id]: true }),
-          {}
-        )
-      },
       state: {
-        rowSelection,
+        rowSelection: controlledRowSelection ?? rowSelection,
+        expanded: controlledExpansionState ?? expanded,
         columnVisibility,
         columnSizing
       },
@@ -170,8 +169,18 @@ export const ContentTable = React.memo(
           : undefined,
       onColumnVisibilityChange: setColumnVisibility,
       onColumnSizingChange: setColumnSizing,
+      onExpandedChange: (updaterOrValue) => {
+        const newExpanded =
+          updaterOrValue instanceof Function
+            ? updaterOrValue(controlledExpansionState ?? expanded)
+            : updaterOrValue;
+        setExpanded(newExpanded);
+        onExpandedChange?.(newExpanded);
+      },
       onRowSelectionChange: (updaterOrValue) => {
-        const prevSelection = checkableRows ? rowSelection : {};
+        const prevSelection = checkableRows
+          ? controlledRowSelection ?? rowSelection
+          : {};
         let newRowSelection =
           updaterOrValue instanceof Function
             ? updaterOrValue(prevSelection)
