@@ -189,17 +189,6 @@ export const ContentTable = React.memo(
           newRowSelection = rowSelection;
         setRowSelection(newRowSelection);
 
-        const flattenDataRecursively = (dataRow: any) => {
-          return dataRow[nestedProperty]
-            ? [
-                dataRow,
-                ...dataRow[nestedProperty].flatMap((nestedRow: any) =>
-                  flattenDataRecursively(nestedRow)
-                )
-              ]
-            : [dataRow];
-        };
-
         const flattenedData =
           nested && nestedProperty
             ? data.flatMap((dataRow) => flattenDataRecursively(dataRow))
@@ -274,6 +263,17 @@ export const ContentTable = React.memo(
       stickyLeftColumns
     );
 
+    const flattenDataRecursively = (dataRow: any) => {
+      return dataRow[nestedProperty]
+        ? [
+            dataRow,
+            ...dataRow[nestedProperty].flatMap((nestedRow: any) =>
+              flattenDataRecursively(nestedRow)
+            )
+          ]
+        : [dataRow];
+    };
+
     const onHeaderClick = (
       e: React.MouseEvent<HTMLDivElement, MouseEvent>,
       header: Header<any, unknown>
@@ -320,7 +320,12 @@ export const ContentTable = React.memo(
             numberOfCheckedItems={
               table.getFilteredSelectedRowModel().flatRows.length
             }
-            numberOfItems={data?.length}
+            numberOfItems={
+              nested && nestedProperty
+                ? data?.flatMap((dataRow) => flattenDataRecursively(dataRow))
+                    .length
+                : data?.length
+            }
             table={table}
             viewId={viewId}
             columns={columns}
